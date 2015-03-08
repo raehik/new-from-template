@@ -1,6 +1,6 @@
-$(date "+%Y-%m-%d")-$(ezstring "%@%").md
+$(date "+%Y-%m-%d")-$(ezstring "%{@||New post}%").md
 ---
-title: %@%
+title: %{@||New post}%
 date: $(date "+%F %T")
 ---
 
