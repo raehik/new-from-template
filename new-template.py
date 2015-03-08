@@ -5,6 +5,7 @@
 
 import sys
 import os
+import stat
 import re
 import subprocess
 import shlex
@@ -54,10 +55,17 @@ class FileTemplator:
         return name
 
     def run_command(self, arg_list):
-        """Run a command, returning the output."""
+        """Run a command, returning the output and a boolean value
+        indicating whether the command failed."""
+        was_successful = True
+
         proc = subprocess.Popen(arg_list,stdout=subprocess.PIPE)
         out, err = proc.communicate()
-        return out.decode(self.CHAR_ENC).strip()
+
+        if proc.returncode != 0:
+            was_successful = False
+
+        return out.decode(self.CHAR_ENC).strip(), was_successful
 
     def replace_formats(self, line):
         replace = ""
@@ -114,11 +122,21 @@ class FileTemplator:
                 self.lines.append(self.format_line(line))
 
     def write_file(self):
-        outfile = open(self.info["outfile"], "a")
+        filename = self.info["outfile"]
+        outfile = open(filename, "a")
         
         for line in self.lines:
             outfile.write(line)
         outfile.flush()
+
+        # make it executable if the template is
+        # we make chmod do the work because it works well with custom
+        # umasks (e.g. if the file isn't set read to other, it won't be
+        # set exec to others)
+        out, is_executable = self.run_command(["test", "-x", self.info["template"]])
+
+        if is_executable:
+            self.run_command(["chmod", "+x", filename])
 
     def edit_file(self):
         editor = os.environ.get("EDITOR", "vim")
