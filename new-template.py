@@ -10,20 +10,38 @@ import subprocess
 import shlex
 
 class FileTemplator:
+    DEFAULT_FORMAT = ""
+    FORMAT_START = "%{"
+    FORMAT_END = "}%"
+    CMD_START = "$("
+    CMD_END = ")"
+    CHAR_ENC = "utf-8"
+    DEFAULT_IDENT = "||"
+
     template_dir = os.environ["HOME"] + "/" + ".templates"
+
     # compile regex for efficiency
-    command = re.compile("\$\((.*?)\)")
+    commands = re.compile("\$\((.*?)\)")
+    formats = re.compile("(%\{(.*?)(?:\|\|(.*?))?\}%)")
+
     info = {}
     lines = []
 
-    def __init__(self, arglist):
-        self.set_template_file(self.get_template_file_for(arglist[1]))
-        self.info["@"] = " ".join(arglist[2:])
-        self.set_outfile()
+    def __init__(self, args):
+        template_args = args[2:]
+
+        # set name of template file from args
+        self.set_template_file(self.template_filename_of(args[1]))
 
         # fill info dict
-        for i in range(len(arglist)):
-            self.info[str(i)] = arglist[i]
+        self.info["@"] = " ".join(template_args)
+        for i in range(len(template_args)):
+            self.info[str(i+1)] = template_args[i]
+
+        # set name of outfile
+        # note that this must be done after filling info dict, since it
+        # might use one of the keys in it (e.g. $1)
+        self.set_outfile()
 
     def set_outfile(self):
         with open(self.info["template"], "r") as f:
@@ -32,27 +50,62 @@ class FileTemplator:
     def set_template_file(self, filename):
         self.info["template"] = self.template_dir + "/" + filename
 
-    def get_template_file_for(self, name):
+    def template_filename_of(self, name):
         return name
 
     def run_command(self, arg_list):
         """Run a command, returning the output."""
         proc = subprocess.Popen(arg_list,stdout=subprocess.PIPE)
         out, err = proc.communicate()
-        return out.decode("utf-8").strip()
+        return out.decode(self.CHAR_ENC).strip()
 
-    def format_line(self, line):
-        for key, value in self.info.items():
-            line = line.replace("%" + key + "%", value)
-        # findall checks for matches anywhere in string
-        # (match only checks at beginning)
-        matches = self.command.findall(line)
+    def replace_formats(self, line):
+        replace = ""
+        no_key = False
+
+        matches = self.formats.findall(line)
+        for match in matches:
+            # get string to replace match with
+            try:
+                replace = self.info[match[1]]
+                if replace == "":
+                    no_key = True
+            except KeyError:
+                no_key = True
+
+            if no_key:
+                # if no key/key was empty, use a default instead
+                if match[2] != "":
+                    # we found a 2nd capture group, which is the default
+                    # value if no key for it in self.info, so use that
+                    replace = match[2]
+                else:
+                    # key doesn't exist & no given default value --
+                    # replace it with fallback default value
+                    replace = self.DEFAULT_FORMAT
+
+            # replace match with string
+            line = line.replace(match[0], replace)
+
+        return line
+
+    def replace_commands(self,line):
+        # findall checks for multiple matches anywhere in string
+        matches = self.commands.findall(line)
         if matches:
             for match in matches:
                 command_output = self.run_command(shlex.split(match))
-                line = line.replace("$(" + match + ")", command_output)
-        print(line)
+                line = line.replace(self.CMD_START + match + self.CMD_END, command_output)
+
         return line
+
+    def format_line(self, line):
+        """Format a single line, replacing format variables and command
+        substitutions."""
+        formatted = self.replace_formats(line)
+        formatted = self.replace_commands(formatted)
+
+        return formatted
 
     def format_template(self):
         with open(self.info["template"], "r") as template_file:
@@ -71,7 +124,8 @@ class FileTemplator:
         editor = os.environ.get("EDITOR", "vim")
         subprocess.call([editor, self.info["outfile"]])
 
-    def template(self):
+    def run(self):
+        """Run the templating process."""
         self.format_template()
         self.write_file()
         self.edit_file()
@@ -79,5 +133,4 @@ class FileTemplator:
 
 
 t = FileTemplator(sys.argv)
-
-t.template()
+t.run()
