@@ -1,0 +1,7 @@
+$(date "+%Y-%m-%d")-$(ezstring "%@%").md
+---
+title: %@%
+date: $(date "+%F %T")
+---
+
+
