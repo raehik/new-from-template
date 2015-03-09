@@ -102,7 +102,7 @@ class FileTemplator:
         matches = self.commands.findall(line)
         if matches:
             for match in matches:
-                command_output = self.run_command(shlex.split(match))
+                command_output, succeeded = self.run_command(shlex.split(match))
                 line = line.replace(self.CMD_START + match + self.CMD_END, command_output)
 
         return line
