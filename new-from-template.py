@@ -17,7 +17,7 @@ class FileTemplator:
     CMD_START = "$("
     CMD_END = ")"
     CHAR_ENC = "utf-8"
-    DEFAULT_IDENT = "||"
+    FALLBACK_SEP = "||"
 
     template_dir = os.environ["HOME"] + "/" + ".templates"
 
@@ -73,12 +73,25 @@ class FileTemplator:
 
         matches = self.formats.findall(line)
         for match in matches:
-            # get string to replace match with
+            # A match is a 3-tuple with data organised as follows:
+            #
+            #     (format_string, info_key, fallback)
+            #
+            # If a fallback value was defined, it will be stored in
+            # fallback -- otherwise fallback will be an empty string.
+
             try:
+                # try to set replace string to value of info_key from
+                # info dictionary
                 replace = self.info[match[1]]
                 if replace == "":
+                    # key existed but was empty, so we don't use it
+                    # e.g. %{@}% if you call without any arguments other
+                    # than the template
                     no_key = True
             except KeyError:
+                # key didn't exist
+                # e.g. %{ayy lmao}% -- no info["ayy lmao"]
                 no_key = True
 
             if no_key:
@@ -88,8 +101,8 @@ class FileTemplator:
                     # value if no key for it in self.info, so use that
                     replace = match[2]
                 else:
-                    # key doesn't exist & no given default value --
-                    # replace it with fallback default value
+                    # key doesn't exist & no given fallback value --
+                    # replace it with default fallback value
                     replace = self.DEFAULT_FORMAT
 
             # replace match with string
