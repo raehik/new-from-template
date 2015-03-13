@@ -8,7 +8,6 @@ import os
 import stat
 import re
 import subprocess
-import shlex
 
 class FileTemplator:
     DEFAULT_FORMAT = ""
