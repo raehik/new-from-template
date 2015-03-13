@@ -54,12 +54,13 @@ class FileTemplator:
     def template_filename_of(self, name):
         return name
 
-    def run_command(self, arg_list):
+    def run_command(self, args):
         """Run a command, returning the output and a boolean value
         indicating whether the command failed."""
         was_successful = True
 
-        proc = subprocess.Popen(arg_list,stdout=subprocess.PIPE)
+        # execute using a shell so we can use piping & redirecting
+        proc = subprocess.Popen(args, stdout=subprocess.PIPE, shell=True)
         out, err = proc.communicate()
 
         if proc.returncode != 0:
@@ -115,7 +116,7 @@ class FileTemplator:
         matches = self.commands.findall(line)
         if matches:
             for match in matches:
-                command_output, succeeded = self.run_command(shlex.split(match))
+                command_output, succeeded = self.run_command(match)
                 line = line.replace(self.CMD_START + match + self.CMD_END, command_output)
 
         return line
