@@ -5,7 +5,6 @@
 
 import sys
 import os
-import stat
 import re
 import subprocess
 
