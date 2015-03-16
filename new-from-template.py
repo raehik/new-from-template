@@ -145,10 +145,10 @@ class FileTemplator:
         # we make chmod do the work because it works well with custom
         # umasks (e.g. if the file isn't set read to other, it won't be
         # set exec to others)
-        out, is_executable = self.run_command(["test", "-x", self.info["template"]])
+        out, is_executable = self.run_command("test -x " + self.info["template"])
 
         if is_executable:
-            self.run_command(["chmod", "+x", filename])
+            self.run_command("chmod +x " + filename)
 
     def edit_file(self):
         editor = os.environ.get("EDITOR", "vim")
