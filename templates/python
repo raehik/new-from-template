@@ -1,0 +1,7 @@
+%{1||new-python}%.py
+#!/usr/bin/env python
+#
+# %{2||Short description of the program/script's operation/function.}%
+#
+
+
