@@ -54,3 +54,5 @@ while getopts ":vh" opt; do
         *) error "-$OPTARG is not a valid option" ; usage 1 ;;
     esac
 done
+
+shift $((OPTIND-1))

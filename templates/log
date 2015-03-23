@@ -1,7 +1,7 @@
-%{1||$(date +%F).md}%
+%{1||%(date +%F)%.md}%
 TYPE:
 EXPECTED:
-START: $(date +%T)
+START: %(date +%T)%
 END:
 TOOK:
 
