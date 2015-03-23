@@ -42,9 +42,12 @@ log() {
     $LOGGER "$LOG_PRE: $1"
 }
 
-# Log an error. Doesn't exit.
+# Log an error. If given a 2nd argument, exit with it as the exit code.
 error() {
     $LOGGER "$LOG_PRE: error: $1"
+    if [[ $2 ]]; then
+        exit $2
+    fi
 }
 
 while getopts ":vh" opt; do
