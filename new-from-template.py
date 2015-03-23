@@ -12,15 +12,15 @@ class FileTemplator:
     DEFAULT_FORMAT = ""
     FORMAT_START = "%{"
     FORMAT_END = "}%"
-    CMD_START = "$("
-    CMD_END = ")"
+    CMD_START = "%("
+    CMD_END = ")%"
     CHAR_ENC = "utf-8"
     FALLBACK_SEP = "||"
 
     template_dir = os.environ["HOME"] + "/" + ".templates"
 
     # compile regex for efficiency
-    commands = re.compile("\$\((.*?)\)")
+    commands = re.compile("%\((.*?)\)%")
     formats = re.compile("(%\{(.*?)(?:\|\|(.*?))?\}%)")
 
     info = {}
