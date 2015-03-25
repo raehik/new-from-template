@@ -1,0 +1,7 @@
+_%{1}%
+#compdef %{1}%
+
+# always use locals!
+local ls_dir="%{2||.}%"
+
+_arguments "1: :($(ls $ls_dir))"
