@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
-# ayy lmao
+# A simple templating program.
 #
 
 import sys
@@ -32,22 +32,53 @@ class FileTemplator:
         # set name of template file from args
         self.set_template_file(self.template_filename_of(args[1]))
 
-        # fill info dict
-        self.info["@"] = " ".join(template_args)
-        for i in range(len(template_args)):
-            self.info[str(i+1)] = template_args[i]
+        # fill info dict from arguments
+        self.set_arg_info(template_args)
+
+        # fill info dict from other sources
+        self.set_env_info()
 
         # set name of outfile
         # note that this must be done after filling info dict, since it
         # might use one of the keys in it (e.g. $1)
         self.set_outfile()
 
+    def set_arg_info(self, args):
+        """Add info from arguments."""
+        self.set_info("@", " ".join(args))
+
+        for i in range(len(args)):
+            self.set_info(str(i+1), args[i])
+
+    def set_env_info(self):
+        """Add info from environment variables."""
+        env_vars = [
+                "USER",
+                "HOME",
+                "PWD",
+                ["EDITOR", "vim"]
+                ]
+
+        for var in env_vars:
+            if type(var) == list:
+                # we provided a default value, so use it
+                self.set_info(var[0], os.environ.get(var[0], var[1]))
+            else:
+                # no default (so it probably always exists)
+                self.set_info(var, os.environ.get(var))
+
+    def set_info(self, key, value):
+        self.info[key] = value
+
+    def get_info(self, key):
+        return self.info[key]
+
     def set_outfile(self):
-        with open(self.info["template"], "r") as f:
-            self.info["outfile"] = self.format_line(f.readline()).strip("\n")
+        with open(self.get_info("template"), "r") as f:
+            self.set_info("outfile", self.format_line(f.readline()).strip("\n"))
 
     def set_template_file(self, filename):
-        self.info["template"] = self.template_dir + "/" + filename
+        self.set_info("template", self.template_dir + "/" + filename)
 
     def template_filename_of(self, name):
         return name
@@ -82,7 +113,7 @@ class FileTemplator:
             try:
                 # try to set replace string to value of info_key from
                 # info dictionary
-                replace = self.info[match[1]]
+                replace = self.get_info(match[1])
                 if replace == "":
                     # key existed but was empty, so we don't use it
                     # e.g. %{@}% if you call without any arguments other
@@ -128,13 +159,13 @@ class FileTemplator:
         return formatted
 
     def format_template(self):
-        with open(self.info["template"], "r") as template_file:
+        with open(self.get_info("template"), "r") as template_file:
             next(template_file)
             for line in template_file:
                 self.lines.append(self.format_line(line))
 
     def write_file(self):
-        filename = self.info["outfile"]
+        filename = self.get_info("outfile")
         outfile = open(filename, "a")
         
         for line in self.lines:
@@ -145,14 +176,14 @@ class FileTemplator:
         # we make chmod do the work because it works well with custom
         # umasks (e.g. if the file isn't set read to other, it won't be
         # set exec to others)
-        out, is_executable = self.run_command("test -x " + self.info["template"])
+        out, is_executable = self.run_command("test -x " + self.get_info("template"))
 
         if is_executable:
             self.run_command("chmod +x " + filename)
 
     def edit_file(self):
         editor = os.environ.get("EDITOR", "vim")
-        subprocess.call([editor, self.info["outfile"]])
+        subprocess.call([editor, self.get_info("outfile")])
 
     def run(self):
         """Run the templating process."""
@@ -162,5 +193,6 @@ class FileTemplator:
 
 
 
-t = FileTemplator(sys.argv)
-t.run()
+if __name__ == "__main__":
+    t = FileTemplator(sys.argv)
+    t.run()
