@@ -1,7 +1,7 @@
-_%{1}%
+%{HOME}%/.zsh_completions/_%{1}%
 #compdef %{1}%
 
 # always use locals!
 local ls_dir="%{2||.}%"
 
-_arguments "1: :($(ls $ls_dir))"
+_files -W "$ls_dir"
