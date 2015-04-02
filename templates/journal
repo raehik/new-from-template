@@ -1,6 +1,6 @@
 %(date "+%Y-%m-%d")%-%(ezstring "%{@||New entry}%")%.md
 ---
-title: %{@||New entry}%
+title: "%{@||New entry}%"
 date: %(date "+%F %T")%
 ---
 

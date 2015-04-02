@@ -1,6 +1,6 @@
 %(echo $HOME)%/journal/%(date "+%Y-%m-%d")%-%(ezstring "Note %{@||#1}%")%.md
 ---
-title: Note #%{@||1}%
+title: "Note #%{@||1}%"
 date: %(date "+%F %T")%
 ---
 
