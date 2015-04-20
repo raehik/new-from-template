@@ -44,7 +44,7 @@ log() {
 
 # Log an error. If given a 2nd argument, exit with it as the exit code.
 error() {
-    $LOGGER "$LOG_PRE: error: $1"
+    $LOGGER "$LOG_PRE: error: $1" >&$STDERR
     if [[ $2 ]]; then
         exit $2
     fi
