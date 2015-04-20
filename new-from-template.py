@@ -85,7 +85,7 @@ class FileTemplator:
 
     def run_command(self, args):
         """Run a command, returning the output and a boolean value
-        indicating whether the command failed."""
+        indicating whether the command failed or not."""
         was_successful = True
 
         # execute using a shell so we can use piping & redirecting
