@@ -187,8 +187,14 @@ class FileTemplator:
 
     def run(self):
         """Run the templating process."""
-        self.format_template()
-        self.write_file()
+        # if file exists, do nothing
+        if os.path.exists(self.get_info("outfile")):
+            pass
+        else:
+            self.format_template()
+            self.write_file()
+
+        # open file for editing
         self.edit_file()
 
 
