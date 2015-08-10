@@ -17,7 +17,7 @@ class FileTemplator:
     CHAR_ENC = "utf-8"
     FALLBACK_SEP = "||"
 
-    template_dir = os.environ["HOME"] + "/" + ".templates"
+    template_dir = os.environ["HOME"] + "/.assets/templates"
 
     # compile regex for efficiency
     commands = re.compile("%\((.*?)\)%")
