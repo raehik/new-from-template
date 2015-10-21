@@ -9,7 +9,8 @@ import re
 import subprocess
 
 class FileTemplator:
-    DEFAULT_FORMAT = ""
+    DEFAULT_FORMAT = "<placeholder>"
+    REQ_PREFIX = "!"
     FORMAT_START = "%{"
     FORMAT_END = "}%"
     CMD_START = "%("
@@ -109,6 +110,23 @@ class FileTemplator:
             #
             # If a fallback value was defined, it will be stored in
             # fallback -- otherwise fallback will be an empty string.
+            #
+            # TODO: what if fallback is set to an empty string? check if that is
+            #       even possible with my code
+
+            key_required = False
+
+            key = match[1]
+            if key.startswith(self.REQ_PREFIX):
+                # key is *required*: if no default, fail instead of replacing
+                # with fallback
+                # note that if you make a key required, providing a default
+                # would be a bit silly -- but I'm keeping it that way anyway
+                # because it's safer
+                key_required = True
+
+                # remove the prefix
+                key = key[len(self.REQ_PREFIX):]
 
             try:
                 # try to set replace string to value of info_key from
@@ -125,15 +143,20 @@ class FileTemplator:
                 no_key = True
 
             if no_key:
-                # if no key/key was empty, use a default instead
+                # if no key/key was empty, use a fallback instead
                 if match[2] != "":
-                    # we found a 2nd capture group, which is the default
+                    # we found a 2nd capture group, which is the fallback
                     # value if no key for it in self.info, so use that
                     replace = match[2]
                 else:
-                    # key doesn't exist & no given fallback value --
-                    # replace it with default fallback value
-                    replace = self.DEFAULT_FORMAT
+                    # no fallback value given
+                    if key_required:
+                        print("error: key/argument %s was required but not present/given" % key)
+                        sys.exit(1)
+                    else:
+                        # key doesn't exist & no given fallback value --
+                        # replace it with default fallback value
+                        replace = self.DEFAULT_FORMAT
 
             # replace match with string
             line = line.replace(match[0], replace)
@@ -167,7 +190,7 @@ class FileTemplator:
     def write_file(self):
         filename = self.get_info("outfile")
         outfile = open(filename, "a")
-        
+
         for line in self.lines:
             outfile.write(line)
         outfile.flush()
