@@ -138,13 +138,13 @@ class FileTemplator:
 
     def set_template_file(self, filename):
         if not os.path.isdir(self.template_dir):
-            print("error: template directory does not exist or is not a directory: %s"
+            error("template directory does not exist or is not a directory: %s"
                     % self.template_dir)
             sys.exit(10)
 
         template_file = self.template_dir + "/" + filename
         if not os.path.exists(template_file):
-            print("error: no template file with that name: %s" % filename)
+            error("no template file with that name: %s" % filename)
             sys.exit(11)
 
         self.set_info("template", template_file)
