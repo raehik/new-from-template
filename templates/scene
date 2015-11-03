@@ -1,0 +1,7 @@
+scene-%{1||XX}%.tex
+% vim: spell : ft=tex
+\scenesep
+
+\section{%{2}%}
+
+
