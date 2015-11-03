@@ -1,5 +1,5 @@
 chapter-%{1||XX}%.tex
+% vim: spell : ft=tex
 \chapter{%{2}%}
 
 
-<!-- vim: set spell : -->
