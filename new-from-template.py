@@ -11,14 +11,17 @@ import subprocess
 class FileTemplator:
     DEFAULT_FORMAT = "<placeholder>"
     REQ_PREFIX = "!"
+    CHAR_ENC = "utf-8"
+
+    # these are currently unused
     FORMAT_START = "%{"
     FORMAT_END = "}%"
     CMD_START = "%("
     CMD_END = ")%"
-    CHAR_ENC = "utf-8"
     FALLBACK_SEP = "||"
 
-    template_dir = os.environ["HOME"] + "/.assets/templates"
+    # folder to store & look for templates in
+    template_dir = os.environ["HOME"] + "/.local/share/templates"
 
     # compile regex for efficiency
     commands = re.compile("%\((.*?)\)%")
@@ -28,13 +31,16 @@ class FileTemplator:
     lines = []
 
     def __init__(self, args):
-        template_args = args[2:]
+        if len(args) == 0:
+            # no args provided
+            print("error: no template to use provided")
+            sys.exit(1)
 
         # set name of template file from args
-        self.set_template_file(self.template_filename_of(args[1]))
+        self.set_template_file(self.template_filename_of(args[0]))
 
         # fill info dict from arguments
-        self.set_arg_info(template_args)
+        self.set_arg_info(args[1:])
 
         # fill info dict from other sources
         self.set_env_info()
@@ -79,7 +85,17 @@ class FileTemplator:
             self.set_info("outfile", self.format_line(f.readline()).strip("\n"))
 
     def set_template_file(self, filename):
-        self.set_info("template", self.template_dir + "/" + filename)
+        if not os.path.isdir(self.template_dir):
+            print("error: template directory does not exist or is not a directory: %s"
+                    % self.template_dir)
+            sys.exit(10)
+
+        template_file = self.template_dir + "/" + filename
+        if not os.path.exists(template_file):
+            print("error: no template file with that name: %s" % filename)
+            sys.exit(11)
+
+        self.set_info("template", template_file)
 
     def template_filename_of(self, name):
         return name
@@ -152,7 +168,7 @@ class FileTemplator:
                     # no fallback value given
                     if key_required:
                         print("error: key/argument %s was required but not present/given" % key)
-                        sys.exit(1)
+                        sys.exit(20)
                     else:
                         # key doesn't exist & no given fallback value --
                         # replace it with default fallback value
@@ -223,5 +239,5 @@ class FileTemplator:
 
 
 if __name__ == "__main__":
-    t = FileTemplator(sys.argv)
+    t = FileTemplator(sys.argv[1:])
     t.run()
