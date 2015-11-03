@@ -7,13 +7,69 @@ import sys
 import os
 import re
 import subprocess
+import argparse
 
+FILENAME = os.path.basename(sys.argv[0])
+
+
+""" Print usage and exit depending on given exit code. """
+def usage(exit_code):
+    if exit_code == 0:
+        pipe = sys.stdout
+    else:
+        # if argument was non-zero, print to STDERR instead
+        pipe = sys.stderr
+
+    parser.print_help(pipe)
+    sys.exit(exit_code)
+
+## Logging {{{
+""" Log a message to a specific pipe (defaulting to stdout). """
+def log_message(message, pipe=sys.stdout):
+    print(FILENAME + ": " + message, file=pipe)
+
+""" If verbose, log an event. """
+def log(message):
+    if not args.verbose:
+        return
+    log_message(message)
+
+""" Log an error. If given a 2nd argument, exit using that error code. """
+def error(message, exit_code=None):
+    log_message("error: " + message, sys.stderr)
+    if exit_code:
+        sys.exit(exit_code)
+## }}}
+
+## Parsing arguments {{{
+""" Argparse override to print usage to stderr on argument error. """
+class ArgumentParserUsage(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write("error: %s\n" % message)
+        self.print_help(sys.stderr)
+        sys.exit(2)
+
+parser = ArgumentParserUsage(description="A simple templating program.")
+
+# add arguments
+parser.add_argument("template",
+                    help="template to use")
+parser.add_argument("template_args", metavar="args", nargs="*",
+                    help="arguments provided to the template")
+parser.add_argument("-v", "--verbose", action="store_true",
+                    help="be verbose (show when fallbacks are used etc.)")
+
+# parse arguments
+args = parser.parse_args()
+## }}}
+
+## class FileTemplator {{{
 class FileTemplator:
     DEFAULT_FORMAT = "<placeholder>"
     REQ_PREFIX = "!"
     CHAR_ENC = "utf-8"
 
-    # these are currently unused
+    # changing these will BREAK THINGS because they're hardcoded in some places
     FORMAT_START = "%{"
     FORMAT_END = "}%"
     CMD_START = "%("
@@ -30,35 +86,30 @@ class FileTemplator:
     info = {}
     lines = []
 
-    def __init__(self, args):
-        if len(args) == 0:
-            # no args provided
-            print("error: no template to use provided")
-            sys.exit(1)
-
+    def __init__(self, template, args):
         # set name of template file from args
-        self.set_template_file(self.template_filename_of(args[0]))
+        self.set_template_file(self.template_filename_of(template))
 
         # fill info dict from arguments
-        self.set_arg_info(args[1:])
+        self.set_arg_info(args)
 
         # fill info dict from other sources
         self.set_env_info()
 
         # set name of outfile
-        # note that this must be done after filling info dict, since it
-        # might use one of the keys in it (e.g. $1)
+        # this is done after filling info{}, since it might use one of the keys
+        # in it (e.g. $1)
         self.set_outfile()
 
     def set_arg_info(self, args):
-        """Add info from arguments."""
+        """ Add info from arguments. """
         self.set_info("@", " ".join(args))
 
         for i in range(len(args)):
             self.set_info(str(i+1), args[i])
 
     def set_env_info(self):
-        """Add info from environment variables."""
+        """ Add info from environment variables. """
         env_vars = [
                 "USER",
                 "HOME",
@@ -80,6 +131,7 @@ class FileTemplator:
     def get_info(self, key):
         return self.info[key]
 
+    """ Process the first line of a file and save as info["outfile"]. """
     def set_outfile(self):
         with open(self.get_info("template"), "r") as f:
             self.set_info("outfile", self.format_line(f.readline()).strip("\n"))
@@ -100,9 +152,9 @@ class FileTemplator:
     def template_filename_of(self, name):
         return name
 
+    """Run a command, returning the output and a boolean value indicating
+    whether the command failed or not."""
     def run_command(self, args):
-        """Run a command, returning the output and a boolean value
-        indicating whether the command failed or not."""
         was_successful = True
 
         # execute using a shell so we can use piping & redirecting
@@ -115,9 +167,6 @@ class FileTemplator:
         return out.decode(self.CHAR_ENC).strip(), was_successful
 
     def replace_formats(self, line):
-        replace = ""
-        no_key = False
-
         matches = self.formats.findall(line)
         for match in matches:
             # A match is a 3-tuple with data organised as follows:
@@ -130,7 +179,9 @@ class FileTemplator:
             # TODO: what if fallback is set to an empty string? check if that is
             #       even possible with my code
 
+            # initialise booleans
             key_required = False
+            no_key = False
 
             key = match[1]
             if key.startswith(self.REQ_PREFIX):
@@ -147,7 +198,7 @@ class FileTemplator:
             try:
                 # try to set replace string to value of info_key from
                 # info dictionary
-                replace = self.get_info(match[1])
+                replace = self.get_info(key)
                 if replace == "":
                     # key existed but was empty, so we don't use it
                     # e.g. %{@}% if you call without any arguments other
@@ -156,6 +207,7 @@ class FileTemplator:
             except KeyError:
                 # key didn't exist
                 # e.g. %{ayy lmao}% -- no info["ayy lmao"]
+                log("key '{}' wasn't found in info".format(key))
                 no_key = True
 
             if no_key:
@@ -164,14 +216,18 @@ class FileTemplator:
                     # we found a 2nd capture group, which is the fallback
                     # value if no key for it in self.info, so use that
                     replace = match[2]
+                    log("key '%s' wasn't found, so the provided fallback '%s' was used"
+                            % key, match[2])
                 else:
                     # no fallback value given
                     if key_required:
-                        print("error: key/argument %s was required but not present/given" % key)
+                        error("key/argument '%s' was required but not present/given" % key)
                         sys.exit(20)
                     else:
                         # key doesn't exist & no given fallback value --
                         # replace it with default fallback value
+                        log("key '{}' wasn't found, no fallback -- default fallback '{}' was used".
+                                format(key, self.DEFAULT_FORMAT))
                         replace = self.DEFAULT_FORMAT
 
             # replace match with string
@@ -189,9 +245,9 @@ class FileTemplator:
 
         return line
 
+    """ Format a single line, replacing format variables and command
+    substitutions. """
     def format_line(self, line):
-        """Format a single line, replacing format variables and command
-        substitutions."""
         formatted = self.replace_formats(line)
         formatted = self.replace_commands(formatted)
 
@@ -199,6 +255,7 @@ class FileTemplator:
 
     def format_template(self):
         with open(self.get_info("template"), "r") as template_file:
+            # skip first line (used for filename of outfile)
             next(template_file)
             for line in template_file:
                 self.lines.append(self.format_line(line))
@@ -224,8 +281,8 @@ class FileTemplator:
         editor = os.environ.get("EDITOR", "vim")
         subprocess.call([editor, self.get_info("outfile")])
 
+    """ Run the templating process. """
     def run(self):
-        """Run the templating process."""
         # if file exists, do nothing
         if os.path.exists(self.get_info("outfile")):
             pass
@@ -235,9 +292,10 @@ class FileTemplator:
 
         # open file for editing
         self.edit_file()
+## }}}
 
 
-
+# run the damn thing
 if __name__ == "__main__":
-    t = FileTemplator(sys.argv[1:])
+    t = FileTemplator(args.template, args.template_args)
     t.run()
