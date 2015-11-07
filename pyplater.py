@@ -216,12 +216,13 @@ class FileTemplator:
                     # we found a 2nd capture group, which is the fallback
                     # value if no key for it in self.info, so use that
                     replace = match[2]
-                    log("key '%s' wasn't found, so the provided fallback '%s' was used"
-                            % key, match[2])
+                    log("key '{}' wasn't found, so the provided fallback '{}' was used".
+                            format(key, match[2]))
                 else:
                     # no fallback value given
                     if key_required:
-                        error("key/argument '%s' was required but not present/given" % key)
+                        error("key/argument '{}' was required but not present/given".
+                            format(key))
                         sys.exit(20)
                     else:
                         # key doesn't exist & no given fallback value --
