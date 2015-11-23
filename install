@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#
+# Install pyplater (to local $HOME/bin).
+#
+
+install_dir="$HOME/bin"
+from_dir="${PWD}"
+
+templates_dir="$HOME/.local/share/templates"
+
+ln -s "$from_dir/pyplater.py" "$install_dir"
+cp -r "templates/" "$templates_dir"
