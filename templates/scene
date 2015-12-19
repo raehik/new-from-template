@@ -1,7 +1,7 @@
-scene-%{1||XX}%.tex
+scene-%(ezstring "%{1||XX}%")%.tex
 % vim: spell : ft=tex
 \scenesep
 
-\section{%{2}%}
+\section{%{1}%}
 
 
