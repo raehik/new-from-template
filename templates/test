@@ -1,7 +1,0 @@
-pyplater-testfile.md
-Heya! This is a test file for the `new-from-template` program.
-
-%{nope}% <-- Here I tried to print a variable that doesn't exist.
-%{HOME}% <-- This is the value of your $HOME environment variable!
-%{!1}% <-- That's the first argument you sent me -- if you didn't send me one,
-Pyplater should fail!

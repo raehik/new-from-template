@@ -1,0 +1,16 @@
+pyplater-tutorial.md
+Heya! This is a tutorial file for Pyplater, intended for seeing how variable and
+command substitution works -- but it's also a template file itself! Dogfooding
+to the max!
+
+TODO use verbose things everywhere
+
+%{nope}% <-- Here I tried to print a variable that doesn't exist.
+%{HOME}% <-- This is the value of your $HOME environment variable!
+%{!1}% <-- That's the first argument you sent me -- if you didn't send me one,
+Pyplater should fail!
+
+1st argument once verbose: %{\1}% and again but non-verbose: %{1}% (requires
+Pyplater to know position in the current line of the match it's replacing)
+
+3 * argument 1 on the same line: %{1}% %{1}% %{1}%
