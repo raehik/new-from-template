@@ -67,6 +67,7 @@ args = parser.parse_args()
 class FileTemplator:
     DEFAULT_FORMAT = "<placeholder>"
     REQ_PREFIX = "!"
+    ESC_PREFIX = "\\"
     CHAR_ENC = "utf-8"
 
     # changing these will BREAK THINGS because they're hardcoded in some places
@@ -167,14 +168,26 @@ class FileTemplator:
         return out.decode(self.CHAR_ENC).strip(), was_successful
 
     def replace_formats(self, line):
-        matches = self.formats.findall(line)
+        match_indexes = [ match.start(0) for match in re.finditer(self.formats, line) ]
+        match_texts = self.formats.findall(line)
+
+        # combine matches with their indexes
+        matches = []
+        if len(match_indexes) != len(match_texts):
+            error("indexes list length doesn't match text list length: why not?")
+            sys.exit(21)
+        for i in range(len(match_indexes)):
+            matches.append([match_indexes[i], match_texts[i]])
+
+        # now iterate over each match
         for match in matches:
-            # A match is a 3-tuple with data organised as follows:
+            # A match is a list of an integer and a 3-tuple with data organised
+            # as follows:
             #
-            #     (format_string, info_key, fallback)
+            #     [ start_pos, (format_string, info_key, fallback) ]
             #
-            # If a fallback value was defined, it will be stored in
-            # fallback -- otherwise fallback will be an empty string.
+            # If a fallback value was defined, it will be stored in fallback --
+            # otherwise fallback will be an empty string.
             #
             # TODO: what if fallback is set to an empty string? check if that is
             #       even possible with my code
@@ -183,7 +196,11 @@ class FileTemplator:
             key_required = False
             no_key = False
 
-            key = match[1]
+            # set variables for separate parts of match
+            match_pos = match[0]
+            match_text = match[1]
+
+            key = match_text[1]
             if key.startswith(self.REQ_PREFIX):
                 # key is *required*: if no default, fail instead of replacing
                 # with fallback
@@ -194,6 +211,18 @@ class FileTemplator:
 
                 # remove the prefix
                 key = key[len(self.REQ_PREFIX):]
+
+            if key.startswith(self.ESC_PREFIX):
+                # should *not* replace this (e.g. actually print '%{key}%'
+                # verbosely, so we remove prefix and skip to next match
+                line = line[:match_pos] + line[match_pos:].replace(self.ESC_PREFIX, "")
+                # update all other indexes because we've removed a part of the
+                # string of length len(ESC_PREFIX)
+                # TODO: code duplication (I put in the same form now, but don't
+                #       know how to skip all below
+                for i in range(len(matches)):
+                    matches[i][0] += len("") - len(self.ESC_PREFIX)
+                continue
 
             try:
                 # try to set replace string to value of info_key from
@@ -212,12 +241,12 @@ class FileTemplator:
 
             if no_key:
                 # if no key/key was empty, use a fallback instead
-                if match[2] != "":
+                if match_text[2] != "":
                     # we found a 2nd capture group, which is the fallback
                     # value if no key for it in self.info, so use that
-                    replace = match[2]
+                    replace = match_text[2]
                     log("key '{}' wasn't found, so the provided fallback '{}' was used".
-                            format(key, match[2]))
+                            format(key, match_text[2]))
                 else:
                     # no fallback value given
                     if key_required:
@@ -232,7 +261,12 @@ class FileTemplator:
                         replace = self.DEFAULT_FORMAT
 
             # replace match with string
-            line = line.replace(match[0], replace)
+            line = line[:match_pos] + line[match_pos:].replace(match_text[0], replace, 1)
+
+            # update all other indexes because changed the string
+            # TODO: duplicated from ESC_PREFIX part
+            for i in range(len(matches)):
+                matches[i][0] += len(replace) - len(match_text[0])
 
         return line
 
