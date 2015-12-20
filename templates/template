@@ -1,0 +1,6 @@
+%{HOME}%/projects/coding/programs/pyplater/templates/%{!1}%
+%{\HOME}%/path/to/file/%{\1}%
+#!/usr/bin/env bash
+# etc
+arg_1=%{\1}%
+arg_all=%{\@}%
