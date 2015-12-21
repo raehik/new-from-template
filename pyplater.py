@@ -56,6 +56,8 @@ parser.add_argument("template",
                     help="template to use")
 parser.add_argument("template_args", metavar="args", nargs="*",
                     help="arguments provided to the template")
+parser.add_argument("-d", "--template-dir",
+                    help="specify directory to search for templates (default ~/.local/share/templates")
 parser.add_argument("-v", "--verbose", action="store_true",
                     help="be verbose (show when fallbacks are used etc.)")
 
@@ -63,12 +65,15 @@ parser.add_argument("-v", "--verbose", action="store_true",
 args = parser.parse_args()
 ## }}}
 
-## class FileTemplator {{{
-class FileTemplator:
+## class Pyplater {{{
+class Pyplater:
     DEFAULT_FORMAT = "<placeholder>"
+    DEFAULT_TEMPLATE_DIR = os.environ["HOME"] + "/.local/share/templates"
     REQ_PREFIX = "!"
     ESC_PREFIX = "\\"
     CHAR_ENC = "utf-8"
+
+    ERR_NOT_FOUND = 10
 
     # changing these will BREAK THINGS because they're hardcoded in some places
     FORMAT_START = "%{"
@@ -77,9 +82,6 @@ class FileTemplator:
     CMD_END = ")%"
     FALLBACK_SEP = "||"
 
-    # folder to store & look for templates in
-    template_dir = os.environ["HOME"] + "/.local/share/templates"
-
     # compile regex for efficiency
     commands = re.compile("%\((.*?)\)%")
     formats = re.compile("(%\{(.*?)(?:\|\|(.*?))?\}%)")
@@ -87,12 +89,12 @@ class FileTemplator:
     info = {}
     lines = []
 
-    def __init__(self, template, args):
+    def __init__(self, template, template_dir, args):
+        # fill info dict from arguments
+        self.set_arg_info(template_dir, args)
+
         # set name of template file from args
         self.set_template_file(self.template_filename_of(template))
-
-        # fill info dict from arguments
-        self.set_arg_info(args)
 
         # fill info dict from other sources
         self.set_env_info()
@@ -102,9 +104,10 @@ class FileTemplator:
         # in it (e.g. $1)
         self.set_outfile()
 
-    def set_arg_info(self, args):
+    def set_arg_info(self, template_dir, args):
         """ Add info from arguments. """
         self.set_info("@", " ".join(args))
+        self.set_info("template_dir", template_dir)
 
         for i in range(len(args)):
             self.set_info(str(i+1), args[i])
@@ -127,35 +130,37 @@ class FileTemplator:
                 self.set_info(var, os.environ.get(var))
 
     def set_info(self, key, value):
+        """Set a key in the info dictionary."""
         self.info[key] = value
 
     def get_info(self, key):
+        """Retrive the value of a key in the info dictionary."""
         return self.info[key]
 
-    """ Process the first line of a file and save as info["outfile"]. """
     def set_outfile(self):
+        """ Process the first line of a file and save as info["outfile"]. """
         with open(self.get_info("template"), "r") as f:
             self.set_info("outfile", self.format_line(f.readline()).strip("\n"))
 
     def set_template_file(self, filename):
-        if not os.path.isdir(self.template_dir):
-            error("template directory does not exist or is not a directory: %s"
-                    % self.template_dir)
-            sys.exit(10)
+        t_dir = self.get_info("template_dir")
+        if not os.path.isdir(t_dir):
+            error("template directory does not exist or is not a directory: {}".format(t_dir))
+            sys.exit(Pyplater.ERR_NOT_FOUND)
 
-        template_file = self.template_dir + "/" + filename
+        template_file = t_dir + "/" + filename
         if not os.path.exists(template_file):
             error("no template file with that name: %s" % filename)
-            sys.exit(11)
+            sys.exit(Pyplater.ERR_NOT_FOUND)
 
         self.set_info("template", template_file)
 
     def template_filename_of(self, name):
         return name
 
-    """Run a command, returning the output and a boolean value indicating
-    whether the command failed or not."""
     def run_command(self, args):
+        """Run a command, returning the output and a boolean value indicating
+        whether the command failed or not."""
         was_successful = True
 
         # execute using a shell so we can use piping & redirecting
@@ -280,9 +285,9 @@ class FileTemplator:
 
         return line
 
-    """ Format a single line, replacing format variables and command
-    substitutions. """
     def format_line(self, line):
+        """Format a single line, replacing format variables and command
+        substitutions."""
         formatted = self.replace_formats(line)
         formatted = self.replace_commands(formatted)
 
@@ -316,8 +321,8 @@ class FileTemplator:
         editor = os.environ.get("EDITOR", "vim")
         subprocess.call([editor, self.get_info("outfile")])
 
-    """ Run the templating process. """
     def run(self):
+        """ Run the templating process. """
         # if file exists, do nothing
         if os.path.exists(self.get_info("outfile")):
             pass
@@ -332,5 +337,9 @@ class FileTemplator:
 
 # run the damn thing
 if __name__ == "__main__":
-    t = FileTemplator(args.template, args.template_args)
+    if args.template_dir:
+        template_dir = args.template_dir
+    else:
+        template_dir = Pyplater.DEFAULT_TEMPLATE_DIR
+    t = Pyplater(args.template, template_dir, args.template_args)
     t.run()
