@@ -67,13 +67,15 @@ args = parser.parse_args()
 
 ## class Pyplater {{{
 class Pyplater:
+    ERR_NOT_FOUND = 1
+    ERR_MISSING_REQ_KEY = 2
+    ERR_WEIRD = 10
+
     DEFAULT_FORMAT = "<placeholder>"
     DEFAULT_TEMPLATE_DIR = os.environ["HOME"] + "/.local/share/templates"
     REQ_PREFIX = "!"
     ESC_PREFIX = "\\"
     CHAR_ENC = "utf-8"
-
-    ERR_NOT_FOUND = 10
 
     # these can be changed if you want
     FORMAT_START = "%{"
@@ -191,7 +193,7 @@ class Pyplater:
         matches = []
         if len(match_indexes) != len(match_texts):
             error("indexes list length doesn't match text list length: why not?")
-            sys.exit(21)
+            sys.exit(Pyplater.ERR_WEIRD)
         for i in range(len(match_indexes)):
             matches.append([match_indexes[i], match_texts[i]])
 
@@ -268,7 +270,7 @@ class Pyplater:
                     if key_required:
                         error("key/argument '{}' was required but not present/given".
                             format(key))
-                        sys.exit(20)
+                        sys.exit(Pyplater.ERR_MISSING_REQ_KEY)
                     else:
                         # key doesn't exist & no given fallback value --
                         # replace it with default fallback value
