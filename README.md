@@ -38,6 +38,9 @@ the `info` dictionary, it is replaced with a placeholder string (currently
 '\<placeholder\>'). If the word starts with an exclamation mark e.g. `%{!word}%`
 then the variable is **required** -- if it isn't found, Pyplater exits.
 
+**Note:** Requiring '$@' (i.e. all arguments) works as you would expect: given
+no arguments, it fails, but with one or more arguments it is fine.
+
 The `info` directory is filled with the command line arguments (discouting
 argument '0', the name of the invoked program), certain environment variables
 and some other variables used internally but made available for flexibility
