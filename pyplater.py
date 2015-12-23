@@ -75,7 +75,7 @@ class Pyplater:
 
     ERR_NOT_FOUND = 10
 
-    # changing these will BREAK THINGS because they're hardcoded in some places
+    # these can be changed if you want
     FORMAT_START = "%{"
     FORMAT_END = "}%"
     CMD_START = "%("
@@ -83,8 +83,19 @@ class Pyplater:
     FALLBACK_SEP = "||"
 
     # compile regex for efficiency
-    commands = re.compile("%\((.*?)\)%")
-    formats = re.compile("(%\{(.*?)(?:\|\|(.*?))?\}%)")
+    MATCH_PART = r"(.*?)"
+    formats = re.compile(
+            r"(" \
+          + re.escape(FORMAT_START) \
+          + MATCH_PART + r"(?:" \
+          + re.escape(FALLBACK_SEP) \
+          + MATCH_PART + r")?" \
+          + re.escape(FORMAT_END) \
+          + r")")
+    commands = re.compile(
+            re.escape(CMD_START) \
+          + MATCH_PART \
+          + re.escape(CMD_END))
 
     info = {}
     lines = []
