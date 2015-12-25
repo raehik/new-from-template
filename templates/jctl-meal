@@ -1,0 +1,12 @@
+%{!1}%
+---
+title: "I cooked: %{!2}%"
+date: %(date "+%F %T")%
+
+layout: meal
+meal-name: %{2||Dish}%
+meal-date: %(date "+%F")%
+meal-time: %{3||Lunch/Dinner}%
+---
+
+

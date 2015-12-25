@@ -1,0 +1,11 @@
+%{!1}%
+---
+title: "Note #%{!2}%"
+date: %(date "+%F %T")%
+
+layout: note
+note-number: %{2}%
+note-edit-time:
+---
+
+
