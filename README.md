@@ -76,3 +76,9 @@ You can get pretty creative with these. The filename for a file made from the
 
 where `ezstring` is a program which makes a filesystem-friendly filename from a
 string.
+
+
+### Executable templates
+
+If a template file has its executable bit set, the new file will be made
+executable as well.
