@@ -6,9 +6,7 @@
 
 STDOUT="1"
 STDERR="2"
-
 FILENAME="${0##*/}"
-
 LOGGER="echo"
 LOG_PRE="$FILENAME"
 
