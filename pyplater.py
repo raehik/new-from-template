@@ -69,6 +69,7 @@ args = parser.parse_args()
 class Pyplater:
     ERR_NOT_FOUND = 1
     ERR_MISSING_REQ_KEY = 2
+    ERR_INVALID_TEMPLATE = 3
     ERR_WEIRD = 10
 
     DEFAULT_FORMAT = "<placeholder>"
@@ -165,6 +166,9 @@ class Pyplater:
         if not os.path.exists(template_file):
             error("no template file with that name: %s" % filename)
             sys.exit(Pyplater.ERR_NOT_FOUND)
+        if os.path.isdir(template_file):
+            error("given template is a directory: %s" % filename)
+            sys.exit(Pyplater.ERR_INVALID_TEMPLATE)
 
         self.set_info("template", template_file)
 
