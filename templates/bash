@@ -12,8 +12,8 @@ Usage: $_FILENAME [options]
 %{2||Description of the program's function (identical).}%
 
   Options:
-    -v          be verbose
-    -h          display this help text and exit\
+    -v, --verbose       be verbose
+    -h, --help          display this help text and exit\
 "
 
 while getopts_long :vh opt \
