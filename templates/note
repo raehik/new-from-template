@@ -1,7 +1,7 @@
-%{HOME}%/journal/%(date "+%Y-%m-%d")%-%(ezstring "Note #%{@||1}%")%.md
+%{HOME}%/journal/%(date "+%F")%-%(ezstring "Note #%{@||1}%")%.md
 ---
 title: "Note #%{@||1}%"
-date: %(date "+%F %T")%
+date: %(date "+%F %T %z")%
 ---
 
 
