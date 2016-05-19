@@ -1,0 +1,13 @@
+%{!1}%
+---
+title: "Exam #%{!2}%: %{!3}%"
+date: %(date "+%F %T %z")%
+layout: exam
+
+exam-subject: %{4}%
+exam-name: %{!3}%
+exam-date: %(date "+%F")%
+exam-time: 09:00 / 14:00
+---
+
+
