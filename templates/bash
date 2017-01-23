@@ -22,7 +22,7 @@ while getopts_long :vh opt \
     "" "$@"
 do
     case "$opt" in
-        v|verbose) _VERBOSE=$(($_VERBOSE + 1)) ;;
+        v|verbose) _VERBOSE=$((_VERBOSE + 1)) ;;
         h|help) _print_usage 0 ;;
         :) _err "$OPTLERR"; _print_usage 1 ;;
     esac
