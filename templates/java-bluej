@@ -5,7 +5,7 @@
  * @author raehik
  * @version %(date "+%F")%
  */
-public enum %{1||NewClass}}
+public enum %{1||NewClass}}%
 {
     /// Example class variable.
     private String description;
