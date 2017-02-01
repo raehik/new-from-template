@@ -1,0 +1,21 @@
+%{1||NewClass}%.java
+/**
+ * Short class description.
+ *
+ * @author raehik
+ * @version %(date "+%F")%
+ */
+public enum %{1||NewClass}}
+{
+    /// Example class variable.
+    private String description;
+
+    /**
+     * Constructor for %{1||NewClass}%.
+     * @param description the description of the new NewClass
+     */
+    %{1||NewClass}%(String description)
+    {
+        this.description = description;
+    }
+}
