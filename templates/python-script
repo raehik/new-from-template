@@ -18,17 +18,6 @@ class ArgumentParserUsage(argparse.ArgumentParser):
         self.print_help(sys.stderr)
         sys.exit(2)
 
-"""Print usage and exit depending on given exit code."""
-def usage(exit_code):
-    if exit_code == 0:
-        pipe = sys.stdout
-    else:
-        # if argument was non-zero, print to STDERR instead
-        pipe = sys.stderr
-
-    parser.print_help(pipe)
-    sys.exit(exit_code)
-
 """Log a message to a specific pipe (defaulting to stdout)."""
 def log_message(message, pipe=sys.stdout):
     print(FILENAME + ": " + message, file=pipe)
