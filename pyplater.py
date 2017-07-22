@@ -57,7 +57,7 @@ parser.add_argument("template",
 parser.add_argument("template_args", metavar="args", nargs="*",
                     help="arguments provided to the template")
 parser.add_argument("-d", "--template-dir",
-                    help="specify directory to search for templates (default ~/.local/share/templates")
+                    help="specify directory to search for templates (default ~/.local/share/pyplates")
 parser.add_argument("-v", "--verbose", action="store_true",
                     help="be verbose (show when fallbacks are used etc.)")
 
@@ -73,7 +73,7 @@ class Pyplater:
     ERR_WEIRD = 10
 
     DEFAULT_FORMAT = "<placeholder>"
-    DEFAULT_TEMPLATE_DIR = os.environ["HOME"] + "/.local/share/templates"
+    DEFAULT_TEMPLATE_DIR = os.environ["HOME"] + "/.local/share/pyplates"
     REQ_PREFIX = "!"
     ESC_PREFIX = "\\"
     CHAR_ENC = "utf-8"

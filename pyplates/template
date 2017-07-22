@@ -1,4 +1,4 @@
-%{HOME}%/projects/coding/programs/pyplater/templates/%{!1}%
+%{HOME}%/projects/coding/programs/pyplater/pyplates/%{!1}%
 %{\HOME}%/path/to/file/%{\1}%
 #!/usr/bin/env bash
 # etc

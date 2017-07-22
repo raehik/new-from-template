@@ -6,7 +6,7 @@
 install_dir="$HOME/bin"
 from_dir="${PWD}"
 
-templates_dir="$HOME/.local/share/templates"
+templates_dir="$HOME/.local/share/pyplates"
 
 ln -s "$from_dir/pyplater.py" "$install_dir"
-cp -r "templates/" "$templates_dir"
+cp -r "pyplates/" "$templates_dir"
